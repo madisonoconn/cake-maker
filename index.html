@@ -941,6 +941,18 @@ $('#noticeBtn').onclick=()=>{
 /* cake <-> link code: a compact binary, deflated when the browser can, written in letters and digits */
 const B62='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 const LISTS=()=>({fr:FROSTINGS.map(f=>f.k),gl:GLAZES.map(g=>g.k),bd:Object.keys(BACKDROPS),fo:FONTS.map(f=>f.k),ri:RIBBONS.map(r=>r[1]),rs:Object.keys(RSTYLES),tp:Object.keys(TOPPINGS),pc:PIPE_COLORS.map(c=>c[1]),tips:['swirl','pearl','line']});
+function simplify(pts,eps){
+  if(pts.length<3)return pts;
+  const keep=new Uint8Array(pts.length); keep[0]=keep[pts.length-1]=1;
+  const stack=[[0,pts.length-1]];
+  while(stack.length){
+    const [a,b]=stack.pop(), A=pts[a], B=pts[b], dx=B.x-A.x, dy=B.y-A.y, len=Math.hypot(dx,dy)||1;
+    let md=0, mi=-1;
+    for(let i=a+1;i<b;i++){const d=Math.abs(dy*(pts[i].x-A.x)-dx*(pts[i].y-A.y))/len; if(d>md){md=d;mi=i;}}
+    if(md>eps){keep[mi]=1; stack.push([a,mi],[mi,b]);}
+  }
+  return pts.filter((_,i)=>keep[i]);
+}
 function packCake(){
   const L=LISTS(), out=[], u8=v=>out.push(v&255), u16=v=>{v=Math.max(0,Math.min(65535,Math.round(v)));out.push(v>>8,v&255);}, ix=(arr,v)=>Math.max(0,arr.indexOf(v));
   u8(ix(L.fr,state.frost));u8(ix(L.gl,state.glaze));u8(ix(L.bd,backdrop));u8(ix(L.fo,font.k));u8(ix(L.ri,ribbon));u8(ix(L.rs,rstyle));
@@ -949,9 +961,10 @@ function packCake(){
   tops.forEach(t=>{u8(ix(L.tp,t.kind));u16(t.x*100);u16(t.y*100);u8((Math.round(t.rot)+128));u8(t.size);});
   const strokes=state.strokes.filter(st=>st.pts.length).slice(0,65535); u16(strokes.length);
   strokes.forEach(st=>{
-    u8(ix(L.tips,st.tip)<<2|st.size); u8(ix(L.pc,st.color)); u16(st.pts.length);
+    const pts=st.tip==='line'?simplify(st.pts,1.2):st.pts;
+    u8(ix(L.tips,st.tip)<<2|st.size); u8(ix(L.pc,st.color)); u16(pts.length);
     let px=-1,py=-1;
-    st.pts.forEach(pt=>{
+    pts.forEach(pt=>{
       const x=Math.round(pt.x*2), y=Math.round(pt.y*2), dx=x-px, dy=y-py;
       if(px<0||Math.abs(dx)>127||Math.abs(dy)>127){u8(128);u16(x);u16(y);} else {u8(dx+256);u8(dy+256);}
       px=x;py=y;
@@ -1007,15 +1020,14 @@ $('#shareBtn').onclick=async()=>{
   }catch(e){msg.textContent='The link didn’t come out. Try Share again.';}
   shareBusy=false;
 };
-const shareText=()=>{const who=$('#fromIn').value.trim();return (who?who+' made':'Someone made')+' you a cake! \uD83C\uDF82';};
 $('#sendBtn').onclick=async()=>{
-  try{await navigator.share({title:shareText(),text:shareText(),url:$('#shareLink').value});}catch(e){}
+  try{await navigator.share({url:$('#shareLink').value});}catch(e){}
 };
 $('#copyBtn').onclick=()=>{
   const inp=$('#shareLink'), b=$('#copyBtn');
   const done=()=>{b.textContent='Copied!';setTimeout(()=>b.textContent='Copy',1600);};
   const fallback=()=>{inp.focus();inp.select();b.textContent='Press Ctrl+C';setTimeout(()=>b.textContent='Copy',2200);};
-  try{navigator.clipboard.writeText(shareText()+'\n'+inp.value).then(done,fallback);}catch(e){fallback();}
+  try{navigator.clipboard.writeText(inp.value).then(done,fallback);}catch(e){fallback();}
 };
 $('#shareLink').addEventListener('focus',e=>e.target.select());
 function giftMode(from){
