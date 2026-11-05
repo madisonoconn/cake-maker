@@ -265,6 +265,7 @@ h2{font-family:var(--display);font-weight:800;font-size:16px;text-transform:uppe
       <div class="actions">
         <button class="btn" id="undo"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4 3 8l4 4"/><path d="M3 8h9a5 5 0 0 1 0 10h-3"/></svg>Undo</button>
         <button class="btn" id="reset"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 10a6 6 0 1 1-2-4.5"/><path d="M16 3v4h-4"/></svg>Start over</button>
+        <button class="btn" id="shuffle"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><rect x="3" y="3" width="14" height="14" rx="3.5"/><g fill="currentColor" stroke="none"><circle cx="7" cy="7" r="1.5"/><circle cx="13" cy="7" r="1.5"/><circle cx="10" cy="10" r="1.5"/><circle cx="7" cy="13" r="1.5"/><circle cx="13" cy="13" r="1.5"/></g></svg>Shuffle</button>
         <button class="btn serve" id="serve"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 1.5l2.4 5 5.4.6-4 3.7 1.1 5.3L10 13.4l-4.9 2.7 1.1-5.3-4-3.7 5.4-.6z"/></svg>Serve it!</button>
       </div>
       <div class="gift-foot">
@@ -1040,11 +1041,39 @@ window.addEventListener('hashchange',openSharedCake);
 
 /* ---------- starting cake ---------- */
 const ybot=x=>{const t=(x-300)/180;return 362+46*Math.sqrt(Math.max(0,1-t*t));};
-const border=[]; for(let x=132;x<=468;x+=19)border.push({x,y:ybot(x)-4+DY});
-state.strokes.push({tip:'swirl',size:1,color:'#f590b4',pts:border});
-const topEdge=[]; for(let a=0;a<=Math.PI;a+=Math.PI/22)topEdge.push({x:300-172*Math.cos(a),y:181+DY+44*Math.sin(a)});
-state.strokes.push({tip:'pearl',size:0,color:'#fff8ec',pts:topEdge});
-[['candle',300,140],['strawberry',236,180],['strawberry',364,180],['flower',300,190],['leaf',200,170]].forEach(([k,x,y],i)=>state.toppings.push({id:++uid,kind:k,x,y:y+DY,rot:[0,-10,10,0,-20][i],size:TOPPINGS[k].size}));
+state.glaze='none';
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+function shuffleCake(){
+  hist.push({t:'reset',snap:clone()});
+  state.frost=pick(FROSTINGS).k;
+  state.glaze=Math.random()<.25?'none':pick(GLAZES.slice(1)).k;
+  backdrop=pick(Object.keys(BACKDROPS)); applyBackdrop();
+  rstyle=pick(Object.keys(RSTYLES)); ribbon=pick(RIBBONS)[1];
+  font=pick(FONTS); document.querySelectorAll('#fontSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===font.k));
+  const icing=()=>pick(PIPE_COLORS)[1];
+  state.strokes=[];
+  const bt=pick(['swirl','pearl']), bs=bt==='swirl'?1:2, step=bt==='swirl'?19:16, bot=[];
+  for(let x=132;x<=468;x+=step)bot.push({x,y:ybot(x)-4+DY});
+  state.strokes.push({tip:bt,size:bs,color:icing(),pts:bot});
+  if(Math.random()<.65){
+    const tt=pick(['pearl','swirl']), n=tt==='pearl'?22:16, top=[];
+    for(let k=0;k<=n;k++){const a=k/n*Math.PI;top.push({x:300-172*Math.cos(a),y:181+DY+44*Math.sin(a)});}
+    state.strokes.push({tip:tt,size:0,color:icing(),pts:top});
+  }
+  const kinds=Object.keys(TOPPINGS).filter(k=>!TOPPINGS[k].num&&k!=='candle');
+  const favs=[], nk=1+Math.floor(Math.random()*2); while(favs.length<nk){const k=pick(kinds);if(!favs.includes(k))favs.push(k);}
+  const spots=[], want=3+Math.floor(Math.random()*4);
+  for(let tries=0;spots.length<want&&tries<200;tries++){const p=randomTop(); if(spots.every(q=>Math.hypot(q.x-p.x,(q.y-p.y)*2.2)>62))spots.push(p);}
+  state.toppings=spots.map(p=>{const k=pick(favs);return {id:++uid,kind:k,x:p.x,y:p.y,rot:Math.round(Math.random()*30-15),size:TOPPINGS[k].size};});
+  if(Math.random()<.5){
+    const c={x:300,y:150+DY}; state.toppings=state.toppings.filter(t=>Math.hypot(t.x-c.x,(t.y-c.y)*2.2)>68);
+    state.toppings.push({id:++uid,kind:'candle',x:c.x,y:c.y,rot:0,size:TOPPINGS.candle.size});
+  }
+  state.toppings.sort((a,b)=>a.y-b.y);
+  rebuild(); renderToppings(); applyCake(); renderRibbon();
+  scene.classList.remove('jiggle'); void scene.offsetWidth; scene.classList.add('jiggle');
+}
+$('#shuffle').onclick=shuffleCake;
 rebuild(); renderToppings(); applyCake();
 starter=JSON.parse(JSON.stringify(cakeData()));
 openSharedCake();
