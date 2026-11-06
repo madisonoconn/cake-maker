@@ -912,7 +912,7 @@ $('#saveBtn').onclick=async()=>{
 };
 
 /* ---------- share ---------- */
-const pageURL=()=>location.href.split('#')[0];
+const pageURL=()=>location.origin+location.pathname;
 const r1=n=>Math.round(n*10)/10;
 function cakeData(){
   return {v:1,frost:state.frost,glaze:state.glaze,backdrop,msg:$('#msgIn').value.trim(),font:font.k,ribbon,rstyle,
@@ -1013,7 +1013,7 @@ $('#shareBtn').onclick=async()=>{
   $('#shareLink').value=''; $('.link-row').hidden=true;
   msg.textContent='Making your link…';
   try{
-    const link=pageURL()+'#'+(await cakeCode());
+    const link=pageURL()+'?c='+(await cakeCode());
     $('#shareLink').value=link; $('.link-row').hidden=false;
     $('#sendBtn').hidden=!navigator.share;
     msg.textContent='Send this link to a friend. They’ll see your cake and can decorate their own, too.';
@@ -1037,12 +1037,13 @@ function giftMode(from){
 }
 let starter=null;
 $('#giftBtn').onclick=()=>{
+  try{history.replaceState(null,'',location.pathname);}catch(e){}
   document.querySelector('.app').classList.remove('gift'); document.title='Cake Maker';
   if(starter)loadCake(starter); $('#msgIn').value='Happy Birthday!'; fitBanner(); notice('');
   window.scrollTo({top:0});
 };
 async function openSharedCake(){
-  const h=location.hash.slice(1);
+  const h=new URLSearchParams(location.search).get('c')||location.hash.slice(1);
   if(/^c[zr][oe][0-9A-Za-z]+$/.test(h)){
     try{ const d=await readCakeCode(h); loadCake(d); giftMode(typeof d.from==='string'?d.from:''); }
     catch(e){ notice('That cake link looks incomplete. Ask your friend to copy the whole link again.',false); }
