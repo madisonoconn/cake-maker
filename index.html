@@ -178,7 +178,7 @@ h2{font-family:var(--display);font-weight:800;font-size:16px;text-transform:uppe
 .app.gift .gift-head{display:grid;justify-items:center;gap:6px;text-align:center;margin:6px 0 20px}
 .app.gift .gift-head h1{font-size:clamp(34px,6.5vw,54px)}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-.gift-tag{margin-top:6px;transform-origin:34px 2px;line-height:0}
+.gift-tag{margin-top:8px;transform-origin:50% 0;line-height:0}
 .gift-tag svg{display:block;overflow:visible}
 .app.gift .gift-tag{animation:tagIn 1.1s cubic-bezier(.3,1.4,.5,1) .35s both}
 @keyframes tagIn{0%{opacity:0;transform:translateY(-24px) rotate(-14deg)}45%{opacity:1;transform:translateY(0) rotate(8deg)}70%{transform:rotate(-5deg)}85%{transform:rotate(2deg)}100%{transform:rotate(0)}}
@@ -1042,15 +1042,14 @@ function giftMode(from){
       c.font='700 30px Caveat, cursive'; const tw=Math.ceil(c.measureText(txt).width);
       const W=tw+62, H=50, I='#5b3b33';
       const NS='http://www.w3.org/2000/svg', svg=document.createElementNS(NS,'svg');
-      svg.setAttribute('viewBox',`-4 -30 ${W+8} ${H+36}`); svg.setAttribute('width',W+8); svg.setAttribute('height',H+36);
+      svg.setAttribute('viewBox',`-4 -8 ${W+8} ${H+16}`); svg.setAttribute('width',W+8); svg.setAttribute('height',H+16);
       svg.setAttribute('role','img'); svg.setAttribute('aria-label',txt);
       svg.innerHTML=`<g transform="rotate(-6 22 25)">
         <path d="M0 25 L22 0 H${W-10} a10 10 0 0 1 10 10 V${H-10} a10 10 0 0 1 -10 10 H22 Z" fill="#fffdf8" stroke="${I}" stroke-width="3.5" stroke-linejoin="round"/>
         <circle cx="22" cy="25" r="5.5" fill="#f7a8c2" stroke="${I}" stroke-width="2.5"/>
         <text x="${36+tw/2}" y="35" text-anchor="middle" font-family="Caveat, cursive" font-weight="700" font-size="30" fill="${I}">${txt.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</text>
       </g>
-      <path d="M30 -28 C28 -14 20 6 21.5 22" fill="none" stroke="${I}" stroke-width="3" stroke-linecap="round"/>
-      <circle cx="21.5" cy="23.5" r="2.4" fill="${I}"/>`;
+`;
       $('#giftTag').replaceChildren(svg);
     };
     draw(); if(document.fonts)document.fonts.load('700 30px Caveat').then(draw).catch(()=>{});
