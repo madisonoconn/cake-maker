@@ -127,6 +127,7 @@ h2{font-family:var(--display);font-weight:800;font-size:16px;text-transform:uppe
   display:grid;justify-items:center;gap:2px;font:inherit;font-size:12px;color:var(--ink);touch-action:none}
 .tile svg{width:48px;height:48px;overflow:visible}
 .tile:active{cursor:grabbing}
+@media (pointer:coarse){.tile{touch-action:manipulation;cursor:pointer}}
 .tip-note{margin:12px 0 0;font-size:13px;color:var(--muted)}
 .seg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .seg button{font:inherit;font-size:14px;color:var(--ink);background:var(--paper);border:3px solid var(--ink);border-radius:14px;box-shadow:0 3px 0 var(--ink);
@@ -225,7 +226,7 @@ h2{font-family:var(--display);font-weight:800;font-size:16px;text-transform:uppe
 <div class="app">
   <header>
     <h1>Let&rsquo;s make a cake!</h1>
-    <p class="sub">Pick a frosting, drag toppings onto the cake, and pipe swirls with the piping bag. Drop a topping in the trash bin to remove it.</p>
+    <p class="sub">Pick a frosting, add toppings, and pipe swirls with the piping bag. Drag toppings around the cake to move them, or drop one in the trash bin to remove it.</p>
   </header>
 
   <div class="gift-head" id="giftHead">
@@ -312,7 +313,7 @@ h2{font-family:var(--display);font-weight:800;font-size:16px;text-transform:uppe
       <div data-pane="toppings" hidden>
         <h2>Topping tray</h2>
         <div class="tiles" id="tray"></div>
-        <p class="tip-note">Drag a topping onto the cake, or tap to drop it on top. Drop it in the trash bin in the corner to remove it.</p>
+        <p class="tip-note">Tap a topping to add it to the cake, then drag it into place. Drop it in the trash bin in the corner to remove it.</p>
       </div>
 
       <div data-pane="piping" hidden>
@@ -603,7 +604,10 @@ document.querySelectorAll('#sizeSeg button').forEach(b=>b.onclick=()=>{sizeIdx=+
 
 Object.keys(TOPPINGS).forEach(k=>{
   const b=document.createElement('button'); b.className='tile'; b.innerHTML=svgOf(k)+TOPPINGS[k].name; b.setAttribute('aria-label','Add '+TOPPINGS[k].name);
+  b.addEventListener('click',()=>{if(b._touch){b._touch=false;addTopping(k,randomTop());}});
   b.addEventListener('pointerdown',e=>{
+    if(e.pointerType!=='mouse'&&e.pointerType!=='pen'){b._touch=true;return;}
+    b._touch=false;
     e.preventDefault(); b.setPointerCapture(e.pointerId);
     const sx=e.clientX,sy=e.clientY; let ghost=null;
     const mv=ev=>{
