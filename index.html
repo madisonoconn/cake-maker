@@ -177,8 +177,19 @@ h2{font-family:var(--display);font-weight:800;font-size:16px;text-transform:uppe
 .app.gift .main{grid-template-columns:minmax(0,1fr);max-width:760px;margin:0 auto}
 .app.gift .gift-head{display:grid;justify-items:center;gap:6px;text-align:center;margin:6px 0 20px}
 .app.gift .gift-head h1{font-size:clamp(34px,6.5vw,54px)}
-.gift-from{margin:0;font-family:var(--display);font-weight:700;font-size:clamp(18px,3vw,22px);color:var(--muted)}
-.gift-from:empty{display:none}
+.gift-tag{position:relative;display:flex;align-items:center;gap:12px;margin-top:22px;padding:10px 26px 10px 18px;background:var(--paper);
+  border:3px solid var(--ink);border-radius:14px 18px 18px 14px;box-shadow:0 5px 0 var(--ink);transform-origin:50% -22px;transform:rotate(-3deg)}
+.gift-tag::before{content:"";position:absolute;left:50%;top:-25px;width:3px;height:22px;background:var(--ink);border-radius:2px}
+.gift-tag::after{content:"";position:absolute;left:calc(50% - 7px);top:-8px;width:14px;height:14px;border-radius:50%;background:var(--pink);border:3px solid var(--ink)}
+.gt-from{font-family:var(--mono);font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.gt-name{font-family:"Caveat",cursive;font-weight:700;font-size:clamp(34px,6vw,46px);line-height:1;color:var(--ink)}
+.gt-heart{width:22px;height:22px;flex:none}
+.gift-spark{position:absolute;width:22px;height:22px;animation:twinkle 1.8s ease-in-out infinite}
+.gift-spark.a{left:-34px;top:-6px}
+.gift-spark.b{right:-30px;bottom:-4px;width:16px;height:16px;animation-delay:.6s}
+.app.gift .gift-tag{animation:tagIn 1.1s cubic-bezier(.3,1.4,.5,1) .35s both}
+@keyframes tagIn{0%{opacity:0;transform:translateY(-36px) rotate(-16deg)}45%{opacity:1;transform:translateY(0) rotate(7deg)}70%{transform:rotate(-6deg)}85%{transform:rotate(1deg)}100%{transform:rotate(-3deg)}}
+@keyframes twinkle{0%,100%{transform:scale(.7) rotate(0);opacity:.6}50%{transform:scale(1.1) rotate(20deg);opacity:1}}
 .app.gift .scene,.app.gift .tp{pointer-events:none}
 .app.gift .gift-foot{display:flex;justify-content:center;margin-top:22px}
 .gift-btn{font-size:21px;padding:11px 28px 9px;background:var(--pink)}
@@ -217,7 +228,12 @@ h2{font-family:var(--display);font-weight:800;font-size:16px;text-transform:uppe
 
   <div class="gift-head" id="giftHead">
     <h1>A cake for you!</h1>
-    <p class="gift-from" id="giftFrom"></p>
+    <div class="gift-tag" id="giftTag" hidden>
+      <svg class="gift-spark a" viewBox="0 0 22 22" aria-hidden="true"><path d="M11 1 Q11 11 21 11 Q11 11 11 21 Q11 11 1 11 Q11 11 11 1Z" fill="#ffe08a" stroke="#5b3b33" stroke-width="2" stroke-linejoin="round"/></svg>
+      <span class="gt-from">from</span><span class="gt-name" id="giftName"></span>
+      <svg class="gt-heart" viewBox="0 0 22 22" aria-hidden="true"><path d="M11 19 C4 14 2 10 3.5 7 C5 4 9 4 11 7.5 C13 4 17 4 18.5 7 C20 10 18 14 11 19Z" fill="#f59ab5" stroke="#5b3b33" stroke-width="2" stroke-linejoin="round"/></svg>
+      <svg class="gift-spark b" viewBox="0 0 22 22" aria-hidden="true"><path d="M11 1 Q11 11 21 11 Q11 11 11 21 Q11 11 1 11 Q11 11 11 1Z" fill="#c9b6f6" stroke="#5b3b33" stroke-width="2" stroke-linejoin="round"/></svg>
+    </div>
   </div>
   <div class="main">
     <section>
@@ -1032,7 +1048,7 @@ $('#copyBtn').onclick=()=>{
 };
 $('#shareLink').addEventListener('focus',e=>e.target.select());
 function giftMode(from){
-  $('#giftFrom').textContent=from?'From '+from:'';
+  $('#giftName').textContent=from||''; $('#giftTag').hidden=!from;
   document.querySelector('.app').classList.add('gift');
   document.title=from?'A cake from '+from:'A cake for you';
 }
